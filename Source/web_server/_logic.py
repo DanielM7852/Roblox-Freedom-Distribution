@@ -25,9 +25,10 @@ import util.versions as versions
 import trustme
 
 # Cryptography imports
-from cryptography.hazmat.primitives import hashes, padding, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
-
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
 
 
 class func_mode(enum.Enum):
