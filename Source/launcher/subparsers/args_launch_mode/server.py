@@ -16,7 +16,6 @@ import launcher.subparsers._logic as sub_logic
 from web_server._logic import server_mode
 
 
-
 @sub_logic.add_args(sub_logic.launch_mode.SERVER)
 def subparse(
     parser: argparse.ArgumentParser,
@@ -81,11 +80,18 @@ def subparse(
         help='If -run_client is passed in, .',
     )
 
-    subparser.add_argument(
+    log_group = subparser.add_mutually_exclusive_group()
+    log_group.add_argument(
         '--quiet', '-q',
         action='store_true',
         help='Suppresses console output.',
     )
+    log_group.add_argument(
+        '--loud',
+        action='store_true',
+        help='Makes RCC console output very verbose.',
+    )
+
     subparser.add_argument(
         '--no_colour', '--no_color',
         action='store_true',
@@ -127,13 +133,15 @@ def gen_log_filter(
 ) -> logger.filter.filter_type:
     if args_ns.quiet:
         result = logger.filter.FILTER_QUIET
+    elif args_ns.loud:
+        result = logger.filter.FILTER_LOUD
     else:
         result = logger.filter.FILTER_REASONABLE
 
     if args_ns.rcc_log_options is not None:
         result = dataclasses.replace(
             result,
-            rcc_logs=logger.filter.filter_type_rcc.parse(*args_ns.rcc_log),
+            rcc_logs=logger.filter.filter_type_bin.parse(*args_ns.rcc_log),
         )
 
     if args_ns.no_colour:

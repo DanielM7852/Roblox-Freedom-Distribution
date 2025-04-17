@@ -13,7 +13,6 @@ import util.versions
 from . import _logic as logic
 
 
-
 @dataclasses.dataclass
 class _arg_type(logic.loggable_arg_type):
     rōblox_version: util.versions.rōblox

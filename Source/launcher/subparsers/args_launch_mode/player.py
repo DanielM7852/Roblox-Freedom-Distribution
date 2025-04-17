@@ -10,7 +10,6 @@ import argparse
 import logger
 
 
-
 @sub_logic.add_args(sub_logic.launch_mode.PLAYER)
 def _(
     parser: argparse.ArgumentParser,
@@ -60,6 +59,25 @@ def _(
         action='store_true',
         help='Suppresses console output.',
     )
+    subparser.add_argument(
+        '--loud',
+        action='store_true',
+        help='Makes the client\'s output file log very verbosely.',
+    )
+
+
+def gen_log_filter(
+    parser: argparse.ArgumentParser,
+    args_ns: argparse.Namespace,
+) -> logger.filter.filter_type:
+    if args_ns.quiet:
+        result = logger.filter.FILTER_QUIET
+    elif args_ns.loud:
+        result = logger.filter.FILTER_LOUD
+    else:
+        result = logger.filter.FILTER_REASONABLE
+
+    return result
 
 
 @sub_logic.serialise_args(sub_logic.launch_mode.PLAYER, {player.arg_type})
@@ -82,8 +100,8 @@ def _(
     if rcc_port is None:
         rcc_port = web_port or 2005
 
-    log_filter = logger.filter.filter_type(
-        other_logs=not args_ns.quiet,
+    log_filter = gen_log_filter(
+        parser, args_ns,
     )
 
     return [

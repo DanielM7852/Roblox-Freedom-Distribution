@@ -14,13 +14,14 @@ import assets.serialisers
 import game_config
 import game_config.structure
 import logger
+from . import _logic as logic
+from textwrap import dedent
 import util.const as const
 import util.resource
 import util.versions
 from . import _logic as logic
 from ..startup_scripts import rcc_server
 from config_type.types import structs, wrappers, callable
-
 
 
 class obj_type(logic.bin_web_entry, logic.server_entry, logic.restartable_entry):
@@ -94,12 +95,13 @@ class obj_type(logic.bin_web_entry, logic.server_entry, logic.restartable_entry)
         path = self.get_versioned_path('AppSettings.xml')
         app_base_url = self.local_args.get_app_base_url()
         with open(path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join([
-                """<?xml version="1.0" encoding="UTF-8"?>""",
-                """<Settings>""",
-                f"""\t<BaseUrl>{app_base_url}</BaseUrl>""",
-                """</Settings>""",
-            ]))
+            f.write(dedent(f'''\
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Settings>
+                    <ContentFolder>Content</ContentFolder>
+                    <BaseUrl>{app_base_url}</BaseUrl>
+                </Settings>
+            '''))
         return path
 
     def save_starter_scripts(self) -> None:
@@ -118,10 +120,11 @@ class obj_type(logic.bin_web_entry, logic.server_entry, logic.restartable_entry)
         Updates the FFlags in the game configuration based on the Rōblox version.
         Individual FFlags, rather than the entire file, override the ones that already exist.
         '''
+        # TODO: move FFlag loading to an API endpoint.
         version = self.retr_version()
-        new_flags = ChainMap(
-            logger.rcc.get_level_table(self.local_args.log_filter),
-        )
+        new_flags = {
+            **self.local_args.log_filter.rcc_logs.get_level_table(),
+        }
 
         match version:
             case util.versions.rōblox.v348:
@@ -211,8 +214,7 @@ class obj_type(logic.bin_web_entry, logic.server_entry, logic.restartable_entry)
         suffix_args: list[str] = []
 
         # There is a chance that RFD can be overwhelmed with processing output.
-        # Removing the `-verbose` flag here will reduce the amount of data
-        # piped from RCC.
+        # Removing the `-verbose` flag here will reduce the amount of data piped from RCC.
         if not self.local_args.log_filter.rcc_logs.is_empty():
             suffix_args.append('-verbose')
 
@@ -353,13 +355,13 @@ class arg_type(logic.bin_web_arg_type):
     rcc_port: int | None
     web_port: int | None
     game_config: game_config.obj_type
+    log_filter: logger.filter.filter_type
+
     track_file_changes: bool = True
     skip_popen: bool = False
 
     # TODO: fix the way place idens work.
     place_iden: int = const.PLACE_IDEN_CONST
-
-    log_filter: logger.filter.filter_type = logger.DEFAULT_FILTER
 
     @override
     def get_base_url(self) -> str:
